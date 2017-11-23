@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<!-- 2017-11-23 Thu 10:52 -->
+<meta  charset="utf-8" />
+<meta  htto-equiv="X-UA-Compatible" content="chrome=1" />
+<meta  name="generator" content="Org-mode with org-ioslide" />
+<meta  name="author" content="fatfingererr @ ClojureTW 十一月聚會" />
+
+
+<!--<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">-->
+<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--This one seems to work all the time, but really small on ipad-->
+<!--<meta name="viewport" content="initial-scale=0.4">-->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" media="all" href="theme/css/default.css" />
+<link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="theme/css/phone.css" />
+<link rel="stylesheet" media="all" href="theme/css/small-icon.css" />
+<base target="_blank"> <!-- This amazingness opens all links in a new tab. -->
+<script data-main="js/slides" src="js/require-1.0.8.min.js"></script>
+
+   <script src="js/jquery-1.7.1.min.js" type="text/javascript"></script>
+
+<script src="js/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML,local/local" type="text/javascript"></script>
+</head>
+<body style="opacity: 0">
+<slides class="layout-widescreen">
+<slide class="title-slide segue nobackground">
+       <aside class="gdbar"><img src="images/clojurescript.png"></aside>
+       <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+       <hgroup class="auto-fadein">
+         <h1 data-config-title><!-- populated from slide_config.json --></h1>
+         <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+         <p data-config-presenter><!-- populated from slide_config.json --></p>
+       </hgroup>
+    </slide>
+  
+
+<slide id="sec-" class=" segue dark quote nobackground" style="background-image: url(nil)">
+<aside class="gdbar right bottom"><img src="images/clojurescript.png"></aside><hgroup class="">
+       <h2 class=" "><div id="outline-container-orgb912879" class="outline-2">
+<h2 id="orgb912879">A Deeper Understanding　　　　　 of Domina Events</h2>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="flexbox vleft auto-fadein" id="text-">
+<p>
+　　
+</p>
+
+
+</article>
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org70492e7" class="outline-3">
+<h3 id="org70492e7">漸進增強策略 (Progressive Enhancement)</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>在第四章中我們提到一種網頁設計的策略，就是漸進增強</li>
+</ul>
+
+
+<ul>
+<li>這種策略能避免瀏覽器的兼容性問題。</li>
+</ul>
+
+
+<ul>
+<li>在漸進增強策略中，網頁應該提供兩種瀏覽方案：</li>
+</ul>
+
+
+<ul>
+<li>1. 不支援 JS （或被停用）的基本使用者體驗</li>
+</ul>
+
+
+<ul>
+<li>2. 支援 JS 與 Ajax 的完整使用者體驗</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org9f830fa" class="outline-3">
+<h3 id="org9f830fa">漸進增強策略 (Progressive Enhancement)</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>一般來說，我們應該首先支持基本使用者體驗</li>
+</ul>
+
+
+<ul>
+<li>接著使網頁能支援 JS</li>
+</ul>
+
+
+<ul>
+<li>最終引入 Ajax 達到提供完整使用者體驗的目的</li>
+</ul>
+
+
+<ul>
+<li>接著我們會用 Tutorial 4 的 Login Form 舉例說明</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org13f0070" class="outline-3">
+<h3 id="org13f0070">使用漸進增強策略改善 Login Form</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>首先先來看 index.html :</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="html">
+...
+&lt;div&gt;
+    &lt;label for="submit"&gt;&lt;/label&gt;
+    &lt;input type="submit" value="Login &amp;rarr;" id="submit"&gt;
+&lt;/div&gt;
+...</pre>
+
+</div>
+
+<ul>
+<li>我們可以看到 input 的 type 是 submit</li>
+</ul>
+
+
+<ul>
+<li>前面學過我們可以把 type 換成 button 但會要求 JS 的實現</li>
+</ul>
+
+
+<ul>
+<li>會不符合漸進增強的策略</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org3468ac8" class="outline-3">
+<h3 id="org3468ac8">使用 domina 的 listen!</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>這邊我們可以使用 domina 的 <code>listen!</code> 函數</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+;;; namespace declaration
+(ns modern-cljs.login
+  (:require <b>[domina.core :refer [by-id value]]
+            [domina.events :refer [listen!]]</b>))</pre>
+
+</div>
+
+<ul>
+<li>來根據我們在 submit 上面做了點擊後，執行帳號密碼的驗證</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+;;; init
+(defn ^:export init []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    <b>(listen! (by-id "submit") :click validate-form)</b>))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-" class="fill white nobackground" style="background-image: url(images/listen-1.png)">
+<hgroup class="">
+       <h2 class="white "><div id="outline-container-org305ff7f" class="outline-3">
+<h3 id="org305ff7f"></h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org2a1d072" class="outline-3">
+<h3 id="org2a1d072">使用 domina 的 listen!</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>雖然我們可以等待 sumbit 被 click 之後進行驗證</li>
+</ul>
+
+
+<ul>
+<li>但是表單依舊會執行我們定義的行為，提交帳號密碼到伺服器端</li>
+</ul>
+
+
+<ul>
+<li>但是帳號密碼如果是驗證無效的話，我們應該要擋下這個行為</li>
+</ul>
+
+
+<ul>
+<li>因此我們要使用 <code>domina.events</code> 中的 <code>prevent-default</code> 幫忙處理這件事</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-" class="fill white nobackground" style="background-image: url(images/prevent-default.png)">
+<hgroup class="">
+       <h2 class="white "><div id="outline-container-orgd60118b" class="outline-3">
+<h3 id="orgd60118b"></h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orga119f67" class="outline-3">
+<h3 id="orga119f67">使用 domina 的 listen!</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>先引入 <code>domina.events</code> ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.login
+  (:require [domina.core :refer [by-id value]]
+            <b>[domina.events :refer [listen! prevent-default]]</b>))</pre>
+
+</div>
+
+<ul>
+<li>就是說在 <code>validate-form</code> 擋下提交帳號密碼到伺服器端：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn validate-form [e]
+  (if (or (empty? (value (by-id "email")))
+          (empty? (value (by-id "password"))))
+    (do 
+      <b>(prevent-default e)</b>
+      (js/alert "Please, complete the form!"))
+    true))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgfdb8100" class="outline-3">
+<h3 id="orgfdb8100">使用 domina 的 listen!</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>如果仔細留意的話， <code>validate-form</code> 不會像原本的一樣回傳 <code>false</code></li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn validate-form [e]
+  (if (or (empty? (value (by-id "email")))
+          (empty? (value (by-id "password"))))
+    <b>(do 
+      (prevent-default e)
+      (js/alert "Please, complete the form!"))</b> ;; return false? 
+    true))</pre>
+
+</div>
+
+<ul>
+<li>因為我們這邊已經用 <code>prevent-default</code> 擋下表單提交</li>
+</ul>
+
+
+<ul>
+<li>因此就不需要回傳 <code>false</code> 來做進一步處理</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org6792ba8" class="outline-3">
+<h3 id="org6792ba8">使用 domina 的 listen!</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>但是 <code>validate-form</code> 需要輸入參數，也就是事件 <code>e</code> 才能擋下提交：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+<b>(defn validate-form [e]</b>
+  ...
+      <b>(prevent-default e)</b>
+      (js/alert "Please, complete the form!"))
+)</pre>
+
+</div>
+
+<ul>
+<li>所以 <code>init</code> 函數需要做一個匿名函數放入事件參數</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn ^:export init []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    (listen! (by-id "submit") :click <b>(fn [e] (validate-form e))</b>)))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgb40962b" class="outline-3">
+<h3 id="orgb40962b">輸入當下立即驗證</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>有一些網站在你輸入帳號密碼結束時，就能直接幫你做驗證</li>
+</ul>
+
+
+<ul>
+<li>這樣能幫助使用者得到立即反饋，更好的輸入帳號和密碼</li>
+</ul>
+
+
+<ul>
+<li>我們現在也可以來做一個，使用正則表達式驗證（regex validators）</li>
+</ul>
+
+
+<ul>
+<li>分別來驗證 email 和 password</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-" class="fill white nobackground" style="background-image: url(images/validate-email.png)">
+<hgroup class="">
+       <h2 class="white "><div id="outline-container-org84da999" class="outline-3">
+<h3 id="org84da999"></h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+
+
+</article>
+
+</slide>
+
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org98aa31d" class="outline-3">
+<h3 id="org98aa31d">輸入當下立即驗證</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>我們可以建立兩個帶有 <code>:dynamic</code> 的正則驗證的變數</li>
+</ul>
+
+
+<ul>
+<li>當使用 <code>:dynamic</code> 時，我們就不需要傳遞正則表達式到底層的驗證函數</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+;;; 4 to 8, at least one numeric digit.
+(def ^:dynamic *password-re* 
+  #"^(?=.*\d).{4,8}$")
+
+(def ^:dynamic *email-re* 
+  #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$")</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgc4d7038" class="outline-3">
+<h3 id="orgc4d7038">輸入當下立即驗證</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>接著我們新增一個監視用戶跳離 email 與 password 輸入欄位的功能</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn ^:export init []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    (let [email (by-id "email")
+          password (by-id "password")]
+      ...
+      <b>(listen! email :blur (fn [evt] (validate-email email)))
+      (listen! password :blur (fn [evt] (validate-password password)))</b>)))</pre>
+
+</div>
+
+<ul>
+<li>其中 <code>validate-email</code> 和 <code>validate-password</code> 就是我接著要實現的正則表達式的驗證函數</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org38b2bbc" class="outline-3">
+<h3 id="org38b2bbc">輸入當下立即驗證</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>接著再來建立我們的即時驗證的函數</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn validate-email [email]
+  (destroy! (by-class "email"))
+  (if (not (re-matches *email-re* (value email)))
+    (do (prepend! (by-id "loginForm") (html [:div.help.email "Wrong email"]))
+      false) true))
+...
+(defn validate-password [password]
+  (destroy! (by-class "password"))
+  (if (not (re-matches *password-re* (value password)))
+    (do (append! (by-id "loginForm") (html [:div.help.password "Wrong password"]))
+      false) true))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+</slide>
+
+
+</slide>
+<slide id="sec-" class=" segue dark quote nobackground" style="background-image: url(nil)">
+<aside class="gdbar right bottom"><img src="images/clojurescript.png"></aside><hgroup class="">
+       <h2 class=" "><div id="outline-container-org28ee1b8" class="outline-2">
+<h2 id="org28ee1b8">HTML on Top,　　　　　　　　　 Clojure on the Bottom</h2>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="flexbox vleft auto-fadein" id="text-">
+<p>
+　
+</p>
+
+
+</article>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org956cab2" class="outline-3">
+<h3 id="org956cab2">HTML5 的新功能</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>這邊會簡單介紹一些 HTML5 的新功能，我們先看 <code>index.html</code></li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="html">
+&lt;form action="login.php" method="post" id="loginForm"&gt;
+...
+    &lt;input type="email" name="email" id="email"
+           placeholder="email"
+           title="Type a well-formed email!"
+           pattern="^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"
+           required&gt;
+...</pre>
+
+</div>
+
+<ul>
+<li>你可以發現 <code>pattern</code> 在做的事情就是我們前面有做過的驗證</li>
+</ul>
+
+
+<ul>
+<li>我們可以把它刪掉，用 <code>domina</code> 的做法完成這件事（後略）</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org6af1980" class="outline-3">
+<h3 id="org6af1980">伺服器端的漸進增強改善</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>我們一直沒有處理伺服器端如何應對表單提交</li>
+</ul>
+
+
+<ul>
+<li>其中在 <code>core.clj</code> 應該對 routes 有定義，來處理表單提交的 POST</li>
+</ul>
+
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojure">
+(ns modern-cljs.core
+  (:require <b>[compojure.core :refer [defroutes GET POST]]  ; &lt;- add POST</b>
+            [compojure.route :refer [not-found files resources]]))
+...
+(defroutes handler
+  (GET "/" [] "Hello from Compojure!")  ;; for testing only
+  (files "/" {:root "target"})          ;; to serve static resources
+  <b>(POST "/login" [email password] (authenticate-user email password))  ; &lt;- add POST route</b>
+  (resources "/" {:root "target"})      ;; to serve anything else
+  (not-found "Page Not Found"))         ;; page not found</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-" class="fill white nobackground" style="background-image: url(images/authenticate-user.png)">
+<hgroup class="">
+       <h2 class="white "><div id="outline-container-org601d335" class="outline-3">
+<h3 id="org601d335"></h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgd7ed56c" class="outline-3">
+<h3 id="orgd7ed56c">伺服器端的漸進增強改善</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>同時我們也要再開一個新檔案 <code>login.clj</code> 做和 <code>login.cljs</code> 一樣的事</li>
+</ul>
+
+
+<ul>
+<li>讓我們在伺服器端也能驗證帳號密碼，底下只舉例 <code>authenticate-user</code> 函數：</li>
+</ul>
+
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn authenticate-user [email password]
+  (if (or (empty? email) (empty? password))
+    (str "Please complete the form")
+    (if (and (validate-email email)
+             (validate-password password))
+      (str email " and " password
+           " passed the formal validation, but you still have to be authenticated"))))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org78f03f1" class="outline-3">
+<h3 id="org78f03f1">伺服器端的漸進增強改善</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>並且把函數新增到 <code>core.clj</code> 在伺服器端使用</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.core
+  (:require [compojure.core :refer [defroutes GET POST]]
+            [compojure.route :refer [not-found files resources]]
+            <b>[modern-cljs.login :refer [authenticate-user]]</b>))
+...</pre>
+
+</div>
+
+
+<ul>
+<li>你會很明顯發現 <code>login.clj</code> 的程式碼和 <code>login.cljs</code> 重複</li>
+</ul>
+
+
+<ul>
+<li>暫且先如此，後面會解決這個問題</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-" class="fill white nobackground" style="background-image: url(images/clj-and-cljs.png)">
+<hgroup class="">
+       <h2 class="white "><div id="outline-container-orgbfcd053" class="outline-3">
+<h3 id="orgbfcd053"></h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+
+
+</article>
+
+</slide>
+
+</slide>
+
+
+
+
+
+</slide>
+<slide id="sec-" class=" segue dark quote nobackground" style="background-image: url(nil)">
+<aside class="gdbar right bottom"><img src="images/clojurescript.png"></aside><hgroup class="">
+       <h2 class=" "><div id="outline-container-org86c0ad6" class="outline-2">
+<h2 id="org86c0ad6">Don't Repeat Yourself</h2>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="flexbox vleft auto-fadein" id="text-">
+<p>
+Tutorial 12
+</p>
+
+
+</article>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org3d2369e" class="outline-3">
+<h3 id="org3d2369e">DRY 原則</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>前一章我們討論到使用漸進增強策略進行開發</li>
+</ul>
+
+
+<ul>
+<li>最後我們在客戶端和伺服器端都有重複的驗證函數，這樣不行</li>
+</ul>
+
+
+<ul>
+<li>進一步我們要討論如何遵守 <a href="https://zh.wikipedia.org/zh-tw/%E4%B8%80%E6%AC%A1%E4%B8%94%E4%BB%85%E4%B8%80%E6%AC%A1">DRY（Don't Repeat Yourself）原則</a></li>
+</ul>
+
+<article class="flexbox vcenter">
+
+<div class="figure">
+<p><img src="images/dry-apply.png" alt="dry-apply.png" width="500px" />
+</p>
+</div>
+</article>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org94d5012" class="outline-3">
+<h3 id="org94d5012">DRY 原則：驗證問題</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>如果把 DRY 原則應用到現在程式碼重複的驗證流程，代表：</li>
+</ul>
+
+
+<ul>
+<li>1. 首先得選擇一個驗證函式庫，能在伺服器端與客戶端驗證資料</li>
+</ul>
+
+
+<ul>
+<li>2. 接著定義在伺服器端與客戶端都能驗證的驗證集</li>
+</ul>
+
+
+<ul>
+<li>3. 最終，我們測試我們的驗證是正確的</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgd183640" class="outline-3">
+<h3 id="orgd183640">選擇驗證函式庫（Validator library）</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>如果你找 Clojure 的驗證函式庫會找到很多</li>
+</ul>
+
+
+<ul>
+<li>但是如果在 2012 年找尋 ClojureScript 的驗證函式庫，則只會找到 <a href="https://github.com/cemerick/valip">Valip</a></li>
+</ul>
+
+<blockquote>
+<p>
+由於 Clojure 的蓬勃發展，現在（2017）已經有許多 cljs 的驗證函式庫
+</p>
+</blockquote>
+
+<ul>
+<li>Valip 是 <a href="https://github.com/weavejester/valip">原本的 Valip</a> 的 Fork ，但是也可以在 ClojueScript 中使用</li>
+</ul>
+
+
+<ul>
+<li>在本 Tutorial 中 Valip 就足夠使用，後續就以此函式庫做講解</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org8a4d4f3" class="outline-3">
+<h3 id="org8a4d4f3">Valip 函數庫：validate</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>讓我們開始先研究 <code>Valip</code> 函式庫有什麼功能</li>
+</ul>
+
+
+<ul>
+<li>先認識函數 <code>validate</code> ：</li>
+</ul>
+
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(validate {:key-1 hvalue-1 :key-2 value-2 ... :key-n value-n}
+  [key-1 predicate-1 error-1]
+  [key-2 predicate-2 error-2]
+  ...
+  [key-n predicate-n error-n])</pre>
+
+</div>
+
+<ul>
+<li>讓我們直接看個範例</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org25792f9" class="outline-3">
+<h3 id="org25792f9">Valip 函數庫：validate</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(validate {:email "you@yourdomain.com" :password "weak1"}
+  [:email present? "Email can't be empty"]
+  [:email email-address? "Invalid email format"]
+  [:password present? "Password can't be empty"]
+  [:password (matches *re-password*) "Invalid password format"])</pre>
+
+</div>
+
+<ul>
+<li>在這之中我們驗證 <code>:email</code> 與 <code>:password</code></li>
+</ul>
+
+
+<ul>
+<li>對於單一 key 的驗證，可以使用有一個以上的驗證模式</li>
+</ul>
+
+
+<ul>
+<li><code>present?</code> 驗證是否存在，也就是是否為空</li>
+</ul>
+
+
+<ul>
+<li><code>email-address?</code> 則是透過 <code>Valip</code> 函式庫定義驗證是否為 email</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org7d6bf53" class="outline-3">
+<h3 id="org7d6bf53">Valip 函數庫：validate</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(validate {:email "you@yourdomain.com" :password "weak1"}
+  [:email present? "Email can't be empty"]
+  [:email email-address? "Invalid email format"]
+  [:password present? "Password can't be empty"]
+  [:password (matches *re-password*) "Invalid password format"])</pre>
+
+</div>
+
+<ul>
+<li>validate 函數驗證若都通過，則回傳 <code>nil</code></li>
+</ul>
+
+
+<ul>
+<li>只要有其中一個驗證不過，就會回傳錯誤訊息</li>
+</ul>
+
+
+<ul>
+<li>假如有多個驗證不過，就會回傳多個，都是以 key-value 方式回傳</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orga295201" class="outline-3">
+<h3 id="orga295201">自定義斷言（predicates）與函數</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>如果看完 <code>valip</code> 函式庫，你會發現要自定義自己的 predicates 與函數並不困難</li>
+</ul>
+
+
+<ul>
+<li>舉例來說 <code>present?</code> 在 <code>valip</code> 的 namespace 中很清楚：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn present?
+  [x]
+  (not (string/blank? x)))</pre>
+
+</div>
+
+<ul>
+<li>驗證函數的特色有兩個：</li>
+</ul>
+
+
+<ul>
+<li>1. 接收單一輸入</li>
+</ul>
+
+
+<ul>
+<li>2. 回傳 true / false</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org8e0dd49" class="outline-3">
+<h3 id="org8e0dd49">自定義斷言（predicates）與函數</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>要特別注意輸入字串是 <code>nil</code> 時 ，可能造成 <code>NullPointerException</code></li>
+</ul>
+
+
+<ul>
+<li>舉例如果我們有一個 match 字串的函數，輸入接受字串：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn matches
+  [re]
+  (fn [s] (boolean (re-matches re <b>s</b>))))</pre>
+
+</div>
+
+<ul>
+<li>而其中的 <code>s</code> ，應該寫成 <code>(str s)</code> ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn matches
+  [re]
+  (fn [s] (boolean (re-matches re <b>(str s)</b>))))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orge172da4" class="outline-3">
+<h3 id="orge172da4">自定義斷言（predicates）與函數</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>那麼到底怎麼自定義 predicates 和函數在 valip 中使用呢？</li>
+</ul>
+
+
+<ul>
+<li>使用 <code>defpredicate</code> macro，這是 valip 的範例之一：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defpredicate valid-email-domain?
+  "Returns true if the domain of the supplied email address has a MX DNS entry."
+  [email]
+  [email-address?]
+  (if-let [domain (second (re-matches #".*@(.*)" email))]
+    (boolean (dns-lookup domain "MX"))))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orge162154" class="outline-3">
+<h3 id="orge162154">Valip 函數庫的小缺點：過多 java 依賴</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>valip 到目前為止沒什麼太大問題，但最大的麻煩是他依賴大量 java 套件</li>
+</ul>
+
+
+<ul>
+<li>可以觀察 namespace 得知：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojure">
+(ns valip.predicates
+  (:require [clojure.string :as string]
+            [clj-time.format :as time-format])
+  (:import
+    <b>[java.net URL MalformedURLException]
+    java.util.Hashtable
+    javax.naming.NamingException
+    javax.naming.directory.InitialDirContext </b>
+    [org.apache.commons.validator.routines IntegerValidator
+                                           DoubleValidator]))
+
+</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org7ece157" class="outline-3">
+<h3 id="org7ece157">Valip 函數庫的小缺點：過多 java 依賴</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>這並不讓人吃驚，在 2012 年時 clojurescript 還沒紅（誤）</li>
+</ul>
+
+
+<ul>
+<li>但是現在 cljs 已經是個熱門語言，為什麼 valip 不放棄 java 依賴？</li>
+</ul>
+
+
+<ul>
+<li>唯二的理由：</li>
+</ul>
+
+
+<ul>
+<li>1-1. 原本的 Valip 已經有許多良好的預定義 predicates 和函數</li>
+</ul>
+
+
+<ul>
+<li>1-2. Valip 的函數都受限於 <code>valip.predicates</code> 的 namespace</li>
+</ul>
+
+
+<ul>
+<li>2. 從 clojure (JVM) 移植 clojurescript (JSVM) 很容易</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgbe90ecf" class="outline-3">
+<h3 id="orgbe90ecf">Feature Expression 的處理</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>對於 Clojure 的方言（例如 ClojureScript, ClojureCLR）我們希望語法盡可能一樣</li>
+</ul>
+
+
+<ul>
+<li>只希望在一些平台特定的語法上做一些調整，達到最大的移植彈性</li>
+</ul>
+
+
+<ul>
+<li>因此如何做到這件事，被稱為 Feature Expression 的問題</li>
+</ul>
+
+
+<ul>
+<li>儘管 Valip 已經實現移植功能，但使用上語法仍然要考量如何 portable</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgf264911" class="outline-3">
+<h3 id="orgf264911">Feature Expression 的處理</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>從 Clojure 1.7.0 開始，關於 Feature Expression 的問題有其他處理方式</li>
+</ul>
+
+
+<ul>
+<li>在本 Tutorial 中我們使用 <code>boot</code> 處理，比起其他方法更容易處理移植問題</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+
+
+</slide>
+<slide id="sec-" class=" segue dark quote nobackground" style="background-image: url(nil)">
+<aside class="gdbar right bottom"><img src="images/clojurescript.png"></aside><hgroup class="">
+       <h2 class=" "><div id="outline-container-org6ec2473" class="outline-2">
+<h2 id="org6ec2473">在 boot 中使用 Valip</h2>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="flexbox vleft auto-fadein" id="text-">
+
+
+</article>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org717c818" class="outline-3">
+<h3 id="org717c818">添加 valip 依賴</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>一如往常地，我們首先在 <code>build.boot</code> 中添加 valip 依賴：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(set-env!
+ ...
+ :dependencies '[...
+                 [org.clojars.magomimmo/valip "0.4.0-SNAPSHOT"]
+                 ])</pre>
+
+</div>
+
+<ul>
+<li>此外我們會用到兩個 namespace 為 <code>valip.core</code> 與 <code>valip.predicates</code> ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(use 'valip.core 'valip.predicates)</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org6c09d33" class="outline-3">
+<h3 id="org6c09d33">測試 valip.predicates</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>我們可以測試看看 valip 的基本功能：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+boot.user&gt; (validate <b>{:email "you@yourdomain.com" :password "weak1"}</b>
+                     [:email present? "Email can't be empty"]
+                     [:email email-address? "Invalid email format"]
+                     [:password present? "Password can't be empty"]
+                     [:password (matches #"^(?=.*\d).{4,8}$") "Invalid password format"])
+nil</pre>
+
+</div>
+
+<ul>
+<li>你會發現他回傳 <code>nil</code> 也就是全部驗證都 pass</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgfe3b5c4" class="outline-3">
+<h3 id="orgfe3b5c4">測試 valip.predicates</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>接著測試一個無效的案例：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+boot.user&gt; (validate {:email nil :password nil}
+                     [:email present? "Email can't be empty"]
+                     [:email email-address? "Invalid email format"]
+                     [:password present? "Password can't be empty"]
+                     [:password (matches #"^(?=.*\d).{4,8}$") "Invalid password format"])
+...
+{:email ["Email can't be empty" "Invalid email format"],
+ :password ["Password can't be empty" "Invalid password format"]}</pre>
+
+</div>
+
+<ul>
+<li>會發現他返回錯誤訊息，分別是以 key-value 方式回傳</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+
+
+
+
+
+
+</slide>
+<slide id="sec-" class=" segue dark quote nobackground" style="background-image: url(nil)">
+<aside class="gdbar right bottom"><img src="images/clojurescript.png"></aside><hgroup class="">
+       <h2 class=" "><div id="outline-container-orgf5e001c" class="outline-2">
+<h2 id="orgf5e001c">建立 validators.clj</h2>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="flexbox vleft auto-fadein" id="text-">
+
+
+</article>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orge336768" class="outline-3">
+<h3 id="orge336768">將 validators 整理為一個 namespace</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>我們可以把前面幾章討論到的驗證集結一處統一編輯，並引入 Valip</li>
+</ul>
+
+
+<ul>
+<li>先在 login 目錄下開個 namespace 並引入 <code>valip.core</code> 與 <code>valip.predicates</code> ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.login.validators
+  (:require [valip.core :refer [validate]]
+            [valip.predicates :refer [present? matches email-address?]]))</pre>
+
+</div>
+
+<ul>
+<li>要引入 <code>valip.predicates</code> 的原因是 valip 提供predicates 的正則表達式</li>
+</ul>
+
+
+<ul>
+<li>我們就不需要自訂驗證的正則表達式了</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgf0380aa" class="outline-3">
+<h3 id="orgf0380aa">在 login 中引入 validators</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>首先我們引入剛剛寫好的 <code>validators</code> 的 namespace</li>
+</ul>
+
+
+<ul>
+<li>現在我們只要在 login 中留下 <code>authenticate-user</code> 就可以：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.login
+  (:require [modern-cljs.login.validators :refer [user-credential-errors]]))
+
+(defn authenticate-user [email password]
+  (if (boolean (user-credential-errors email password))
+    (str "Please complete the form.")
+    (str email " and " password
+           " passed the formal validation, but we still have to authenticate you")))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+</slide>
+
+
+</slide>
+<slide id="sec-" class=" segue dark quote nobackground" style="background-image: url(nil)">
+<aside class="gdbar right bottom"><img src="images/clojurescript.png"></aside><hgroup class="">
+       <h2 class=" "><div id="outline-container-org69db56d" class="outline-2">
+<h2 id="org69db56d">跨越不可踰越之界限</h2>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="flexbox vleft auto-fadein" id="text-">
+<p>
+（誤）
+</p>
+
+
+</article>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org44fbe8b" class="outline-3">
+<h3 id="org44fbe8b">Reader Conditionals</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>在 Clojure 1.7.0 中引入了新功能為 Reader Conditionals</li>
+</ul>
+
+
+<ul>
+<li>對於後綴為 <code>.cljc</code> 的檔案，會特別進行功能識別（feature condition）</li>
+</ul>
+
+
+<ul>
+<li>在 Reader Conditionals 提供兩個識別方法：在函數前加上 <code>#?</code> 和 <code>#?@</code></li>
+</ul>
+
+
+<ul>
+<li>根據指定的編譯平台，我們能讓具有移植性的函式庫變成 non-portable</li>
+</ul>
+
+
+<ul>
+<li>因為在伺服器端，我們可以使用純 Clojure 與 JVM 因此變成 non-portable 沒有問題</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org81eaa23" class="outline-3">
+<h3 id="org81eaa23">Reader Conditionals</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>而在 <code>#?</code> 後面，可透過 clj, cljs 和 clr 做編譯期（compile-time）的註明，其中：
+<ol>
+<li><code>:clj</code> 會被識別為 JVM</li>
+<li><code>:cljs</code> 會被識別為 JSVM</li>
+<li><code>:clr</code> 會被識別回 Microsoft 的 CLR（也就是 .NET ）</li>
+</ol></li>
+</ul>
+
+
+<ul>
+<li>假如我們想使用 <code>valip.predicates</code> 為 non-portable 的話 ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+<b>#? (:clj</b> (defn email-domain-errors [email]
+           (validate
+            {:email email}
+            [:email <b>pred/valid-email-domain? </b> ;; valip.predicates as pred
+　　　　　　　　　  "The domain of the email doesn't exist."]))<b>)</b>
+</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgaa28c4c" class="outline-3">
+<h3 id="orgaa28c4c">Reader Conditionals</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>那如果目前是要在 cljs 中使用，我們就讓他通通用 JSVM 編譯即可</li>
+</ul>
+
+
+<ul>
+<li>不過我們得先把在 clj/cljs 中共用的 namespace ，放到資料夾 <code>cljc</code> 中</li>
+</ul>
+
+
+<ul>
+<li>因此剛建立的 validators.clj 應該要放到 <code>cljc</code> 目錄下並改名為 <code>cljc</code> 後綴</li>
+</ul>
+
+
+<ul>
+<li>並且我們要更新 <code>build.boot</code> 檔案，並重新啟動 <code>boot</code> ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(set-env!
+ :source-paths #{"src/clj" "src/cljs" "src/cljc"}
+ ...
+ )</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgf054326" class="outline-3">
+<h3 id="orgf054326">在 boot 中開啟 bREPL</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>現在我們可以在 boot 中開啟 bREPL 使用我們自定的函數 ：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+boot.user=&gt; (start-repl)
+...
+cljs.user&gt; (require '[modern-cljs.login.validators :refer [user-credential-errors]])
+nil</pre>
+
+</div>
+
+<ul>
+<li>我們可以嘗試使用定義的函數來驗證看看：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+cljs.user&gt; (user-credential-errors nil nil)
+{:email ["Email can't be empty." "The provided email is invalid."],
+ :password ["Password can't be empty." "The provided password is invalid"]}
+cljs.user&gt; (user-credential-errors "me@me.com" "weak1")
+nil</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orgff52584" class="outline-3">
+<h3 id="orgff52584">修改 login.cljs</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>在 REPL 中看起來沒問題，我們把 validators 加入 login 中，並 refer 驗證函數：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.login
+  (:require [domina.core :refer [append!
+                                 by-class
+                                 by-id
+                                 destroy!
+                                 prepend!
+                                 value
+                                 attr]]
+            [domina.events :refer [listen! prevent-default]]
+            [hiccups.runtime]
+            <b>[modern-cljs.login.validators :refer [user-credential-errors]]</b>)
+  (:require-macros [hiccups.core :refer [html]]))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orga39440d" class="outline-3">
+<h3 id="orga39440d">修改 login.cljs</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>要修改的地方很少，只要把驗證 email 地方加入函數：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn validate-email [email]
+  (destroy! (by-class "email"))
+  (if-let [errors (:email <b>(user-credential-errors (value email) nil)</b>)]
+    (do
+      (prepend! (by-id "loginForm") (html [:div.help.email (first errors)]))
+      false)
+    true))</pre>
+
+</div>
+
+<ul>
+<li>留意這邊我們只有驗證 email 所以密碼部分是留 <code>nil</code> ，回傳的錯誤也只收 <code>:email</code></li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org2593bf2" class="outline-3">
+<h3 id="org2593bf2">修改 login.cljs</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>依此類推，可以依序修改 <code>validate-password</code> , <code>validate-form</code> 以及 <code>init</code></li>
+</ul>
+
+
+<ul>
+<li>留意修改 <code>init</code> 時，由於他會直接編譯到 <code>index.html</code> 中引用的 js ，所以需要手動重新整理頁面</li>
+</ul>
+
+
+<ul>
+<li>現在我們只剩下在 html 部分有重複 validate 到，不遵守 DRY 原則</li>
+</ul>
+
+
+<ul>
+<li>因此我們後續可以到 html 中把他移除掉</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org774e393" class="outline-3">
+<h3 id="org774e393">建立伺服器端的 validator</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>我們可以透過 shoreleave 來幫助我們把 validator 放到 remotes 的 namespace</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.remotes
+  (:require [modern-cljs.core :refer [handler]]
+            [compojure.handler :refer [site]]
+            [shoreleave.middleware.rpc :refer [defremote wrap-rpc]]
+            <b>[modern-cljs.login.validators :as v]</b>))
+...
+(defremote email-domain-errors [email]
+  <b>(v/email-domain-errors email)</b>)</pre>
+
+</div>
+
+<ul>
+<li>特別留意這邊不是用 <code>:refer</code> 而是 <code>:as</code> 因為在伺服器端以及 remote 保持同樣的名字</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-org57c665f" class="outline-3">
+<h3 id="org57c665f">使用 remotized 的 validator</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>最後一部就是可以把全部東西通通放在 login 中，而命名空間會包含：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(ns modern-cljs.login
+  (:require-macros [hiccups.core :refer [html]]
+                   <b>[shoreleave.remotes.macros :as shore-macros]</b>)
+  (:require [domina.core :refer [by-id by-class value 
+                                 append! prepend! destroy! attr log]]
+            ...
+            <b>[modern-cljs.login.validators :refer [user-credential-errors]]
+            [shoreleave.remotes.http-rpc :refer [remote-callback]]</b>))</pre>
+
+</div>
+
+
+</article>
+
+</slide>
+
+
+</slide>
+<slide id="sec-"  >
+<hgroup class="">
+       <h2 class=" "><div id="outline-container-orge2300c4" class="outline-3">
+<h3 id="orge2300c4">使用 remotized 的 validator</h3>
+</div>
+</h2>
+       <h3></h3>
+       </hgroup>
+<article class="" id="text-">
+<ul>
+<li>我們接著看在伺服器端的驗證：</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="prettyprint" data-lang="clojurescript">
+(defn validate-email-domain [email]
+  (remote-callback :email-domain-errors
+                   [email]
+                   #(if %
+                      (do
+                        (prepend! (by-id "loginForm")
+                                  (html [:div.help.email
+                                         "The email domain doesn't exist."]))
+                        false)
+                      true)))</pre>
+
+</div>
+
+<ul>
+<li>接著就可以打開頁面實際手動測試，到此就大功告成了</li>
+</ul>
+
+
+</article>
+
+</slide>
+
+</slide>
+<slide class="backdrop"></slide>
+</slides> 
+<!--[if IE]>
+  <script src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
+  <script>CFInstall.check({mode: 'overlay'});</script>
+<![endif]-->
+</body> 
+
+</html>

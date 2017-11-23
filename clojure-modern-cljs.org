@@ -1,0 +1,924 @@
+#+TITLE: Modern ClojureScript
+#+SUBTITLE: 導讀 Tutorial 10 ~ 12 
+#+DATE: 2017/11/23 (四)
+#+AUTHOR: fatfingererr @ ClojureTW 十一月聚會
+#+EMAIL: fatifngererr.tw@gmail.com
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:comment d:(not "LOGBOOK") date:t
+#+OPTIONS: e:t email:nil f:t inline:t num:nil p:nil pri:nil stat:t
+#+OPTIONS: tags:t tasks:t tex:t timestamp:t toc:nil todo:t |:t
+
+#+DESCRIPTION:
+#+EXCLUDE_TAGS: noexport
+#+KEYWORDS:
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+
+#+GOOGLE_PLUS: https://plus.google.com/fatfingererr
+# COMPANY: <a href="https://fatfingererr.github.io/">http://fatfingererr.github.io/</a>
+#+WWW: https://fatfingererr.github.io
+#+GITHUB: http://github.com/fatfingererr
+#+TWITTER: fatfingererr
+
+#+FAVICON: images/clojurescript.png
+#+ICON: images/clojurescript.png
+#+HASHTAG: Modern ClojureScript 10 ~ 12
+
+
+* A Deeper Understanding　　　　　 of Domina Events
+  :PROPERTIES:
+  :SLIDE:    segue dark quote
+  :ASIDE:    right bottom
+  :ARTICLE:  flexbox vleft auto-fadein
+  :END:
+　
+　
+** 漸進增強策略 (Progressive Enhancement)
+
+- 在第四章中我們提到一種網頁設計的策略，就是漸進增強
+
+
+- 這種策略能避免瀏覽器的兼容性問題。
+
+
+- 在漸進增強策略中，網頁應該提供兩種瀏覽方案：
+
+
+- 1. 不支援 JS （或被停用）的基本使用者體驗
+
+
+- 2. 支援 JS 與 Ajax 的完整使用者體驗
+
+
+** 漸進增強策略 (Progressive Enhancement)
+
+- 一般來說，我們應該首先支持基本使用者體驗
+
+
+- 接著使網頁能支援 JS
+
+
+- 最終引入 Ajax 達到提供完整使用者體驗的目的
+
+
+- 接著我們會用 Tutorial 4 的 Login Form 舉例說明
+
+
+** 使用漸進增強策略改善 Login Form 
+
+- 首先先來看 index.html :
+
+#+BEGIN_SRC html
+...
+<div>
+    <label for="submit"></label>
+    <input type="submit" value="Login &rarr;" id="submit">
+</div>
+...
+#+END_SRC
+
+- 我們可以看到 input 的 type 是 submit
+
+
+- 前面學過我們可以把 type 換成 button 但會要求 JS 的實現
+
+
+- 會不符合漸進增強的策略
+
+
+** 使用 domina 的 listen!
+
+- 這邊我們可以使用 domina 的 =listen!= 函數
+
+#+BEGIN_SRC clojurescript
+;;; namespace declaration
+(ns modern-cljs.login
+  (:require <b>[domina.core :refer [by-id value]]
+            [domina.events :refer [listen!]]</b>))
+#+END_SRC
+
+- 來根據我們在 submit 上面做了點擊後，執行帳號密碼的驗證
+
+#+BEGIN_SRC clojurescript
+;;; init
+(defn ^:export init []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    <b>(listen! (by-id "submit") :click validate-form)</b>))
+#+END_SRC
+
+
+** 
+:PROPERTIES:
+:FILL:     images/listen-1.png
+:TITLE:    white
+:SLIDE:    white
+:END:
+
+** 使用 domina 的 listen!
+
+- 雖然我們可以等待 sumbit 被 click 之後進行驗證
+
+
+- 但是表單依舊會執行我們定義的行為，提交帳號密碼到伺服器端
+
+
+- 但是帳號密碼如果是驗證無效的話，我們應該要擋下這個行為
+
+
+- 因此我們要使用 =domina.events= 中的 =prevent-default= 幫忙處理這件事
+
+
+** 
+:PROPERTIES:
+:FILL:     images/prevent-default.png
+:TITLE:    white
+:SLIDE:    white
+:END:
+
+
+** 使用 domina 的 listen!
+
+- 先引入 =domina.events= ：
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.login
+  (:require [domina.core :refer [by-id value]]
+            <b>[domina.events :refer [listen! prevent-default]]</b>))
+#+END_SRC
+
+- 就是說在 =validate-form= 擋下提交帳號密碼到伺服器端：
+
+#+BEGIN_SRC clojurescript
+(defn validate-form [e]
+  (if (or (empty? (value (by-id "email")))
+          (empty? (value (by-id "password"))))
+    (do 
+      <b>(prevent-default e)</b>
+      (js/alert "Please, complete the form!"))
+    true))
+#+END_SRC
+
+
+** 使用 domina 的 listen!
+
+- 如果仔細留意的話， =validate-form= 不會像原本的一樣回傳 =false=
+
+#+BEGIN_SRC clojurescript
+(defn validate-form [e]
+  (if (or (empty? (value (by-id "email")))
+          (empty? (value (by-id "password"))))
+    <b>(do 
+      (prevent-default e)
+      (js/alert "Please, complete the form!"))</b> ;; return false? 
+    true))
+#+END_SRC
+
+- 因為我們這邊已經用 =prevent-default= 擋下表單提交
+
+
+- 因此就不需要回傳 =false= 來做進一步處理
+
+
+** 使用 domina 的 listen!
+
+- 但是 =validate-form= 需要輸入參數，也就是事件 =e= 才能擋下提交：
+
+#+BEGIN_SRC clojurescript
+<b>(defn validate-form [e]</b>
+  ...
+      <b>(prevent-default e)</b>
+      (js/alert "Please, complete the form!"))
+)
+#+END_SRC
+
+- 所以 =init= 函數需要做一個匿名函數放入事件參數
+
+#+BEGIN_SRC clojurescript
+(defn ^:export init []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    (listen! (by-id "submit") :click <b>(fn [e] (validate-form e))</b>)))
+#+END_SRC
+
+
+**  輸入當下立即驗證
+
+- 有一些網站在你輸入帳號密碼結束時，就能直接幫你做驗證
+
+
+- 這樣能幫助使用者得到立即反饋，更好的輸入帳號和密碼
+
+
+- 我們現在也可以來做一個，使用正則表達式驗證（regex validators）
+
+
+- 分別來驗證 email 和 password
+
+** 
+:PROPERTIES:
+:FILL:     images/validate-email.png
+:TITLE:    white
+:SLIDE:    white
+:END:
+
+
+
+**  輸入當下立即驗證
+
+- 我們可以建立兩個帶有 =:dynamic= 的正則驗證的變數
+
+
+- 當使用 =:dynamic= 時，我們就不需要傳遞正則表達式到底層的驗證函數
+
+#+BEGIN_SRC clojurescript
+;;; 4 to 8, at least one numeric digit.
+(def ^:dynamic *password-re* 
+  #"^(?=.*\d).{4,8}$")
+
+(def ^:dynamic *email-re* 
+  #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$")
+#+END_SRC
+
+
+**  輸入當下立即驗證
+
+- 接著我們新增一個監視用戶跳離 email 與 password 輸入欄位的功能
+
+#+BEGIN_SRC clojurescript
+(defn ^:export init []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    (let [email (by-id "email")
+          password (by-id "password")]
+      ...
+      <b>(listen! email :blur (fn [evt] (validate-email email)))
+      (listen! password :blur (fn [evt] (validate-password password)))</b>)))
+#+END_SRC
+
+- 其中 =validate-email= 和 =validate-password= 就是我接著要實現的正則表達式的驗證函數
+
+**  輸入當下立即驗證
+
+- 接著再來建立我們的即時驗證的函數
+
+#+BEGIN_SRC clojurescript
+(defn validate-email [email]
+  (destroy! (by-class "email"))
+  (if (not (re-matches *email-re* (value email)))
+    (do (prepend! (by-id "loginForm") (html [:div.help.email "Wrong email"]))
+      false) true))
+...
+(defn validate-password [password]
+  (destroy! (by-class "password"))
+  (if (not (re-matches *password-re* (value password)))
+    (do (append! (by-id "loginForm") (html [:div.help.password "Wrong password"]))
+      false) true))
+#+END_SRC
+
+
+* HTML on Top,　　　　　　　　　 Clojure on the Bottom
+  :PROPERTIES:
+  :SLIDE:    segue dark quote
+  :ASIDE:    right bottom
+  :ARTICLE:  flexbox vleft auto-fadein
+  :END:
+　
+
+
+** HTML5 的新功能
+
+- 這邊會簡單介紹一些 HTML5 的新功能，我們先看 =index.html=
+
+#+BEGIN_SRC html
+<form action="login.php" method="post" id="loginForm">
+...
+    <input type="email" name="email" id="email"
+           placeholder="email"
+           title="Type a well-formed email!"
+           pattern="^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"
+           required>
+...
+#+END_SRC
+
+- 你可以發現 =pattern= 在做的事情就是我們前面有做過的驗證
+
+
+- 我們可以把它刪掉，用 =domina= 的做法完成這件事（後略）
+
+
+** 伺服器端的漸進增強改善
+
+- 我們一直沒有處理伺服器端如何應對表單提交
+
+
+- 其中在 =core.clj= 應該對 routes 有定義，來處理表單提交的 POST
+
+
+#+BEGIN_SRC clojure
+(ns modern-cljs.core
+  (:require <b>[compojure.core :refer [defroutes GET POST]]  ; <- add POST</b>
+            [compojure.route :refer [not-found files resources]]))
+...
+(defroutes handler
+  (GET "/" [] "Hello from Compojure!")  ;; for testing only
+  (files "/" {:root "target"})          ;; to serve static resources
+  <b>(POST "/login" [email password] (authenticate-user email password))  ; <- add POST route</b>
+  (resources "/" {:root "target"})      ;; to serve anything else
+  (not-found "Page Not Found"))         ;; page not found
+#+END_SRC
+
+** 
+:PROPERTIES:
+:FILL:     images/authenticate-user.png
+:TITLE:    white
+:SLIDE:    white
+:END:
+
+
+** 伺服器端的漸進增強改善
+
+- 同時我們也要再開一個新檔案 =login.clj= 做和 =login.cljs= 一樣的事
+
+
+- 讓我們在伺服器端也能驗證帳號密碼，底下只舉例 =authenticate-user= 函數：
+
+
+#+BEGIN_SRC clojurescript
+(defn authenticate-user [email password]
+  (if (or (empty? email) (empty? password))
+    (str "Please complete the form")
+    (if (and (validate-email email)
+             (validate-password password))
+      (str email " and " password
+           " passed the formal validation, but you still have to be authenticated"))))
+#+END_SRC
+
+
+** 伺服器端的漸進增強改善
+
+- 並且把函數新增到 =core.clj= 在伺服器端使用
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.core
+  (:require [compojure.core :refer [defroutes GET POST]]
+            [compojure.route :refer [not-found files resources]]
+            <b>[modern-cljs.login :refer [authenticate-user]]</b>))
+...
+#+END_SRC
+
+
+- 你會很明顯發現 =login.clj= 的程式碼和 =login.cljs= 重複
+
+
+- 暫且先如此，後面會解決這個問題
+
+
+** 
+:PROPERTIES:
+:FILL:     images/clj-and-cljs.png
+:TITLE:    white
+:SLIDE:    white
+:END:
+
+
+
+
+
+* Don't Repeat Yourself
+  :PROPERTIES:
+  :SLIDE:    segue dark quote
+  :ASIDE:    right bottom
+  :ARTICLE:  flexbox vleft auto-fadein
+  :END:
+
+Tutorial 12
+
+** DRY 原則
+
+- 前一章我們討論到使用漸進增強策略進行開發
+
+
+- 最後我們在客戶端和伺服器端都有重複的驗證函數，這樣不行
+
+
+- 進一步我們要討論如何遵守 [[https://zh.wikipedia.org/zh-tw/一次且仅一次][DRY（Don't Repeat Yourself）原則]]
+
+#+BEGIN_CENTER
+#+ATTR_HTML: :width 500px
+[[file:images/dry-apply.png]]
+#+END_CENTER
+
+
+** DRY 原則：驗證問題
+
+- 如果把 DRY 原則應用到現在程式碼重複的驗證流程，代表：
+
+
+- 1. 首先得選擇一個驗證函式庫，能在伺服器端與客戶端驗證資料
+
+ 
+- 2. 接著定義在伺服器端與客戶端都能驗證的驗證集
+ 
+
+- 3. 最終，我們測試我們的驗證是正確的
+
+
+** 選擇驗證函式庫（Validator library）
+ 
+- 如果你找 Clojure 的驗證函式庫會找到很多
+
+
+- 但是如果在 2012 年找尋 ClojureScript 的驗證函式庫，則只會找到 [[https://github.com/cemerick/valip][Valip]]
+
+#+BEGIN_QUOTE
+由於 Clojure 的蓬勃發展，現在（2017）已經有許多 cljs 的驗證函式庫
+#+END_QUOTE
+
+- Valip 是 [[https://github.com/weavejester/valip][原本的 Valip]] 的 Fork ，但是也可以在 ClojueScript 中使用
+
+
+- 在本 Tutorial 中 Valip 就足夠使用，後續就以此函式庫做講解
+
+
+** Valip 函數庫：validate
+
+- 讓我們開始先研究 =Valip= 函式庫有什麼功能
+
+
+- 先認識函數 =validate= ：
+
+
+#+BEGIN_SRC clojurescript
+(validate {:key-1 hvalue-1 :key-2 value-2 ... :key-n value-n}
+  [key-1 predicate-1 error-1]
+  [key-2 predicate-2 error-2]
+  ...
+  [key-n predicate-n error-n])
+#+END_SRC
+
+- 讓我們直接看個範例
+
+** Valip 函數庫：validate
+
+#+BEGIN_SRC clojurescript
+(validate {:email "you@yourdomain.com" :password "weak1"}
+  [:email present? "Email can't be empty"]
+  [:email email-address? "Invalid email format"]
+  [:password present? "Password can't be empty"]
+  [:password (matches *re-password*) "Invalid password format"])
+#+END_SRC
+
+- 在這之中我們驗證 =:email= 與 =:password=
+
+
+- 對於單一 key 的驗證，可以使用有一個以上的驗證模式
+
+
+- =present?= 驗證是否存在，也就是是否為空
+
+
+- =email-address?= 則是透過 =Valip= 函式庫定義驗證是否為 email
+
+
+** Valip 函數庫：validate
+
+#+BEGIN_SRC clojurescript
+(validate {:email "you@yourdomain.com" :password "weak1"}
+  [:email present? "Email can't be empty"]
+  [:email email-address? "Invalid email format"]
+  [:password present? "Password can't be empty"]
+  [:password (matches *re-password*) "Invalid password format"])
+#+END_SRC
+
+- validate 函數驗證若都通過，則回傳 =nil=
+
+
+- 只要有其中一個驗證不過，就會回傳錯誤訊息 
+
+
+- 假如有多個驗證不過，就會回傳多個，都是以 key-value 方式回傳
+
+** 自定義斷言（predicates）與函數
+
+- 如果看完 =valip= 函式庫，你會發現要自定義自己的 predicates 與函數並不困難
+
+
+- 舉例來說 =present?= 在 =valip= 的 namespace 中很清楚：
+
+#+BEGIN_SRC clojurescript
+(defn present?
+  [x]
+  (not (string/blank? x)))
+#+END_SRC
+
+- 驗證函數的特色有兩個：
+
+
+- 1. 接收單一輸入
+
+
+- 2. 回傳 true / false
+
+
+** 自定義斷言（predicates）與函數
+
+- 要特別注意輸入字串是 =nil= 時 ，可能造成 =NullPointerException=
+
+
+- 舉例如果我們有一個 match 字串的函數，輸入接受字串：
+
+#+BEGIN_SRC clojurescript
+(defn matches
+  [re]
+  (fn [s] (boolean (re-matches re <b>s</b>))))
+#+END_SRC
+
+- 而其中的 =s= ，應該寫成 =(str s)= ：
+
+#+BEGIN_SRC clojurescript
+(defn matches
+  [re]
+  (fn [s] (boolean (re-matches re <b>(str s)</b>))))
+#+END_SRC
+
+
+** 自定義斷言（predicates）與函數
+
+- 那麼到底怎麼自定義 predicates 和函數在 valip 中使用呢？
+
+
+- 使用 =defpredicate= macro，這是 valip 的範例之一：
+
+#+BEGIN_SRC clojurescript
+(defpredicate valid-email-domain?
+  "Returns true if the domain of the supplied email address has a MX DNS entry."
+  [email]
+  [email-address?]
+  (if-let [domain (second (re-matches #".*@(.*)" email))]
+    (boolean (dns-lookup domain "MX"))))
+#+END_SRC
+
+
+** Valip 函數庫的小缺點：過多 java 依賴
+
+- valip 到目前為止沒什麼太大問題，但最大的麻煩是他依賴大量 java 套件
+
+
+- 可以觀察 namespace 得知：
+
+#+BEGIN_SRC clojure
+(ns valip.predicates
+  (:require [clojure.string :as string]
+            [clj-time.format :as time-format])
+  (:import
+    <b>[java.net URL MalformedURLException]
+    java.util.Hashtable
+    javax.naming.NamingException
+    javax.naming.directory.InitialDirContext </b>
+    [org.apache.commons.validator.routines IntegerValidator
+                                           DoubleValidator]))
+
+
+#+END_SRC
+
+
+** Valip 函數庫的小缺點：過多 java 依賴
+
+- 這並不讓人吃驚，在 2012 年時 clojurescript 還沒紅（誤）
+
+
+- 但是現在 cljs 已經是個熱門語言，為什麼 valip 不放棄 java 依賴？
+
+
+- 唯二的理由：
+
+
+- 1-1. 原本的 Valip 已經有許多良好的預定義 predicates 和函數
+
+
+- 1-2. Valip 的函數都受限於 =valip.predicates= 的 namespace
+
+
+- 2. 從 clojure (JVM) 移植 clojurescript (JSVM) 很容易
+
+
+** Feature Expression 的處理
+
+- 對於 Clojure 的方言（例如 ClojureScript, ClojureCLR）我們希望語法盡可能一樣
+
+
+- 只希望在一些平台特定的語法上做一些調整，達到最大的移植彈性
+
+
+- 因此如何做到這件事，被稱為 Feature Expression 的問題
+
+
+- 儘管 Valip 已經實現移植功能，但使用上語法仍然要考量如何 portable
+
+
+** Feature Expression 的處理
+
+- 從 Clojure 1.7.0 開始，關於 Feature Expression 的問題有其他處理方式
+
+
+- 在本 Tutorial 中我們使用 =boot= 處理，比起其他方法更容易處理移植問題
+
+
+* 在 boot 中使用 Valip
+  :PROPERTIES:
+  :SLIDE:    segue dark quote
+  :ASIDE:    right bottom
+  :ARTICLE:  flexbox vleft auto-fadein
+  :END:
+
+** 添加 valip 依賴
+
+- 一如往常地，我們首先在 =build.boot= 中添加 valip 依賴：
+
+#+BEGIN_SRC clojurescript
+(set-env!
+ ...
+ :dependencies '[...
+                 [org.clojars.magomimmo/valip "0.4.0-SNAPSHOT"]
+                 ])
+#+END_SRC
+
+- 此外我們會用到兩個 namespace 為 =valip.core= 與 =valip.predicates= ：
+
+#+BEGIN_SRC clojurescript
+(use 'valip.core 'valip.predicates)
+#+END_SRC
+
+
+** 測試 valip.predicates
+
+- 我們可以測試看看 valip 的基本功能：
+
+#+BEGIN_SRC clojurescript
+boot.user> (validate <b>{:email "you@yourdomain.com" :password "weak1"}</b>
+                     [:email present? "Email can't be empty"]
+                     [:email email-address? "Invalid email format"]
+                     [:password present? "Password can't be empty"]
+                     [:password (matches #"^(?=.*\d).{4,8}$") "Invalid password format"])
+nil
+#+END_SRC
+
+- 你會發現他回傳 =nil= 也就是全部驗證都 pass
+
+
+** 測試 valip.predicates
+
+- 接著測試一個無效的案例：
+
+#+BEGIN_SRC clojurescript
+boot.user> (validate {:email nil :password nil}
+                     [:email present? "Email can't be empty"]
+                     [:email email-address? "Invalid email format"]
+                     [:password present? "Password can't be empty"]
+                     [:password (matches #"^(?=.*\d).{4,8}$") "Invalid password format"])
+...
+{:email ["Email can't be empty" "Invalid email format"],
+ :password ["Password can't be empty" "Invalid password format"]}
+#+END_SRC
+
+- 會發現他返回錯誤訊息，分別是以 key-value 方式回傳
+
+
+
+
+
+
+* 建立 validators.clj
+  :PROPERTIES:
+  :SLIDE:    segue dark quote
+  :ASIDE:    right bottom
+  :ARTICLE:  flexbox vleft auto-fadein
+  :END:
+
+** 將 validators 整理為一個 namespace
+
+- 我們可以把前面幾章討論到的驗證集結一處統一編輯，並引入 Valip
+
+
+- 先在 login 目錄下開個 namespace 並引入 =valip.core= 與 =valip.predicates= ：
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.login.validators
+  (:require [valip.core :refer [validate]]
+            [valip.predicates :refer [present? matches email-address?]]))
+#+END_SRC
+
+- 要引入 =valip.predicates= 的原因是 valip 提供predicates 的正則表達式
+
+
+- 我們就不需要自訂驗證的正則表達式了
+
+
+** 在 login 中引入 validators
+
+- 首先我們引入剛剛寫好的 =validators= 的 namespace
+
+
+- 現在我們只要在 login 中留下 =authenticate-user= 就可以：
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.login
+  (:require [modern-cljs.login.validators :refer [user-credential-errors]]))
+
+(defn authenticate-user [email password]
+  (if (boolean (user-credential-errors email password))
+    (str "Please complete the form.")
+    (str email " and " password
+           " passed the formal validation, but we still have to authenticate you")))
+#+END_SRC
+
+
+* 跨越不可踰越之界限
+  :PROPERTIES:
+  :SLIDE:    segue dark quote
+  :ASIDE:    right bottom
+  :ARTICLE:  flexbox vleft auto-fadein
+  :END:
+
+（誤）
+
+** Reader Conditionals
+
+- 在 Clojure 1.7.0 中引入了新功能為 Reader Conditionals
+
+
+- 對於後綴為 =.cljc= 的檔案，會特別進行功能識別（feature condition）
+
+
+- 在 Reader Conditionals 提供兩個識別方法：在函數前加上 =#?= 和 =#?@= 
+
+
+- 根據指定的編譯平台，我們能讓具有移植性的函式庫變成 non-portable
+
+
+- 因為在伺服器端，我們可以使用純 Clojure 與 JVM 因此變成 non-portable 沒有問題
+
+
+** Reader Conditionals
+
+- 而在 =#?= 後面，可透過 clj, cljs 和 clr 做編譯期（compile-time）的註明，其中：
+  1. =:clj= 會被識別為 JVM
+  2. =:cljs= 會被識別為 JSVM
+  3. =:clr= 會被識別回 Microsoft 的 CLR（也就是 .NET ）
+
+
+- 假如我們想使用 =valip.predicates= 為 non-portable 的話 ：
+
+#+BEGIN_SRC clojurescript
+<b>#? (:clj</b> (defn email-domain-errors [email]
+           (validate
+            {:email email}
+            [:email <b>pred/valid-email-domain? </b> ;; valip.predicates as pred
+　　　　　　　　　  "The domain of the email doesn't exist."]))<b>)</b>
+
+#+END_SRC
+
+
+** Reader Conditionals
+
+- 那如果目前是要在 cljs 中使用，我們就讓他通通用 JSVM 編譯即可
+
+
+- 不過我們得先把在 clj/cljs 中共用的 namespace ，放到資料夾 =cljc= 中
+
+
+- 因此剛建立的 validators.clj 應該要放到 =cljc= 目錄下並改名為 =cljc= 後綴
+
+
+- 並且我們要更新 =build.boot= 檔案，並重新啟動 =boot= ：
+
+#+BEGIN_SRC clojurescript
+(set-env!
+ :source-paths #{"src/clj" "src/cljs" "src/cljc"}
+ ...
+ )
+#+END_SRC
+
+** 在 boot 中開啟 bREPL
+
+- 現在我們可以在 boot 中開啟 bREPL 使用我們自定的函數 ：
+
+#+BEGIN_SRC clojurescript
+boot.user=> (start-repl)
+...
+cljs.user> (require '[modern-cljs.login.validators :refer [user-credential-errors]])
+nil
+#+END_SRC
+
+- 我們可以嘗試使用定義的函數來驗證看看：
+
+#+BEGIN_SRC clojurescript
+cljs.user> (user-credential-errors nil nil)
+{:email ["Email can't be empty." "The provided email is invalid."],
+ :password ["Password can't be empty." "The provided password is invalid"]}
+cljs.user> (user-credential-errors "me@me.com" "weak1")
+nil
+#+END_SRC
+
+** 修改 login.cljs
+
+- 在 REPL 中看起來沒問題，我們把 validators 加入 login 中，並 refer 驗證函數：
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.login
+  (:require [domina.core :refer [append!
+                                 by-class
+                                 by-id
+                                 destroy!
+                                 prepend!
+                                 value
+                                 attr]]
+            [domina.events :refer [listen! prevent-default]]
+            [hiccups.runtime]
+            <b>[modern-cljs.login.validators :refer [user-credential-errors]]</b>)
+  (:require-macros [hiccups.core :refer [html]]))
+#+END_SRC
+
+** 修改 login.cljs
+
+- 要修改的地方很少，只要把驗證 email 地方加入函數：
+
+#+BEGIN_SRC clojurescript
+(defn validate-email [email]
+  (destroy! (by-class "email"))
+  (if-let [errors (:email <b>(user-credential-errors (value email) nil)</b>)]
+    (do
+      (prepend! (by-id "loginForm") (html [:div.help.email (first errors)]))
+      false)
+    true))
+#+END_SRC
+
+- 留意這邊我們只有驗證 email 所以密碼部分是留 =nil= ，回傳的錯誤也只收 =:email=
+
+** 修改 login.cljs
+
+- 依此類推，可以依序修改 =validate-password= , =validate-form= 以及 =init=
+
+
+- 留意修改 =init= 時，由於他會直接編譯到 =index.html= 中引用的 js ，所以需要手動重新整理頁面
+
+
+- 現在我們只剩下在 html 部分有重複 validate 到，不遵守 DRY 原則
+
+
+- 因此我們後續可以到 html 中把他移除掉
+
+
+** 建立伺服器端的 validator
+
+- 我們可以透過 shoreleave 來幫助我們把 validator 放到 remotes 的 namespace
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.remotes
+  (:require [modern-cljs.core :refer [handler]]
+            [compojure.handler :refer [site]]
+            [shoreleave.middleware.rpc :refer [defremote wrap-rpc]]
+            <b>[modern-cljs.login.validators :as v]</b>))
+...
+(defremote email-domain-errors [email]
+  <b>(v/email-domain-errors email)</b>)
+#+END_SRC
+
+- 特別留意這邊不是用 =:refer= 而是 =:as= 因為在伺服器端以及 remote 保持同樣的名字
+
+
+** 使用 remotized 的 validator
+
+- 最後一部就是可以把全部東西通通放在 login 中，而命名空間會包含：
+
+#+BEGIN_SRC clojurescript
+(ns modern-cljs.login
+  (:require-macros [hiccups.core :refer [html]]
+                   <b>[shoreleave.remotes.macros :as shore-macros]</b>)
+  (:require [domina.core :refer [by-id by-class value 
+                                 append! prepend! destroy! attr log]]
+            ...
+            <b>[modern-cljs.login.validators :refer [user-credential-errors]]
+            [shoreleave.remotes.http-rpc :refer [remote-callback]]</b>))
+#+END_SRC
+
+
+** 使用 remotized 的 validator
+
+- 我們接著看在伺服器端的驗證：
+
+#+BEGIN_SRC clojurescript
+(defn validate-email-domain [email]
+  (remote-callback :email-domain-errors
+                   [email]
+                   #(if %
+                      (do
+                        (prepend! (by-id "loginForm")
+                                  (html [:div.help.email
+                                         "The email domain doesn't exist."]))
+                        false)
+                      true)))
+#+END_SRC
+
+- 接著就可以打開頁面實際手動測試，到此就大功告成了
